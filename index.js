@@ -78,10 +78,12 @@ async function readData() {
         },
     ]
     the_session.read(nodeToRead, maxAge, function (err, dataValue) {
+        responeData = []
         if (!err) {
             for (i = 0; i < dataValue.length; i++) {
                 responeData = [...responeData, dataValue[i].value.value]
             }
+
             influxdb.storeData(dbUrl, dbName, responeData)
         }
         return err
@@ -103,10 +105,12 @@ async function closeSession() {
 // Run commands
 runOpcClient()
 
-setTimeout(() => {
-    readData()
-}, 250)
+setTimeout(() => {}, 500)
 
-setTimeout(() => {
-    closeSession()
-}, 500)
+setInterval(() => {
+    readData()
+}, 1000)
+
+// setTimeout(() => {
+//     closeSession()
+// }, 500)
