@@ -1,0 +1,16 @@
+{
+  "name": "examensarbetet",
+  "version": "1.0.0",
+  "description": "ITHS Examensarbete 2021",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joachim Ekström",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.2.0",
+    "node-fetch": "^2.6.1",
+    "node-opcua": "^2.40.0"
+  }
+}
