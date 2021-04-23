@@ -105,7 +105,7 @@ runOpcClient()
 
 setTimeout(() => {
     readData()
-}, 100)
+}, 250)
 
 setTimeout(() => {
     closeSession()

@@ -12,7 +12,7 @@ async function storeData(url, db, data) {
     completeString = fixMeasurement(completeString, measurement)
     completeString = combineNameValue(completeString, tagNames, tagValues, true)
     completeString = combineNameValue(completeString, fieldNames, fieldValues, false)
-    //completeString = addTimestamp(completeString, timestamp)
+    completeString = addTimestamp(completeString, timestamp)
 
     console.log(completeString)
     postData(url, db, completeString)
@@ -43,7 +43,7 @@ function combineNameValue(incString, name, value, tags) {
 }
 
 function addTimestamp(incString, time) {
-    if (time !== 0) {
+    if (time !== "") {
         incString += " "
         incString += time
     }
@@ -52,8 +52,6 @@ function addTimestamp(incString, time) {
 }
 
 function postData(url, db, data) {
-    //  console.log(`${url}write?db=${db}`)
-
     fetch(`${url}write?db=${db}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
