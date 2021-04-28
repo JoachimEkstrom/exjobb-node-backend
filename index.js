@@ -1,4 +1,5 @@
 const { OPCUAClient, makeBrowsePath, AttributeIds, resolveNodeId, TimestampsToReturn } = require("node-opcua")
+const opcua = require("node-opcua")
 const async = require("async")
 const influxdb = require("./InfluxDb")
 const endpointUrl = "opc.tcp://DESKTOP-3NAA2AR:4841/"
@@ -26,24 +27,20 @@ async function runOpcClient() {
 
     async.series([
         // step 1 : connect to
-        function (callback) {
+        function () {
             client.connect(endpointUrl, function (err) {
                 if (err) {
-                    console.log(" cannot connect to endpoint :", endpointUrl)
+                    console.log("Cannot connect to endpoint :", endpointUrl)
                 } else {
-                    console.log("connected!")
+                    console.log("Connected!")
+                    client.createSession(function (err, session) {
+                        if (err) {
+                            return err
+                        }
+                        console.log("Session created!")
+                        the_session = session
+                    })
                 }
-                callback(err)
-            })
-        },
-
-        // step 2 : createSession
-        async function () {
-            client.createSession(function (err, session) {
-                if (err) {
-                    return err
-                }
-                the_session = session
             })
         },
     ])
@@ -90,6 +87,29 @@ async function readData() {
     })
 }
 
+async function callAddMethod(a, b) {
+    let value = [a, b]
+
+    let methodToCalls = [
+        {
+            objectId: "ns=7;s=MAIN.methods",
+            methodId: "ns=7;s=MAIN.methods#Method_Add2",
+            inputArguments: [
+                { dataType: opcua.DataType.Float, value: a },
+                { dataType: opcua.DataType.Float, value: b },
+            ],
+        },
+    ]
+
+    the_session.call(methodToCalls, function (err, results) {
+        if (err) {
+            console.log("Err: " + err)
+        }
+        console.log("Inputs: ", a, b)
+        console.log("Result: ", results[0].outputArguments[0].value)
+    })
+}
+
 // close session
 async function closeSession() {
     the_session.close(function (err) {
@@ -109,6 +129,7 @@ setTimeout(() => {}, 500)
 
 setInterval(() => {
     readData()
+    callAddMethod(5.4, 10.3)
 }, 1000)
 
 // setTimeout(() => {
