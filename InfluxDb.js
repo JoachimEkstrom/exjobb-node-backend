@@ -57,7 +57,7 @@ function postData(url, db, data) {
         headers: { "Content-Type": "application/json" },
         body: data,
     }).then((response) => {
-        console.log(response.status)
+        console.log(response.status, "\n")
         //console.log(response.statusText)
         //console.log(response.headers)
     })

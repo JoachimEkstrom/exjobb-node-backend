@@ -88,8 +88,6 @@ async function readData() {
 }
 
 async function callAddMethod(a, b) {
-    let value = [a, b]
-
     let methodToCalls = [
         {
             objectId: "ns=7;s=MAIN.methods",
@@ -106,7 +104,24 @@ async function callAddMethod(a, b) {
             console.log("Err: " + err)
         }
         console.log("Inputs: ", a, b)
-        console.log("Result: ", results[0].outputArguments[0].value)
+        console.log("Result: ", results[0].outputArguments[0].value, "\n")
+    })
+}
+
+async function callAddMethodNoArguments() {
+    let methodToCalls = [
+        {
+            objectId: "ns=7;s=MAIN.methods",
+            methodId: "ns=7;s=MAIN.methods#Method_Add",
+        },
+    ]
+
+    the_session.call(methodToCalls, function (err, results) {
+        console.log("Calling function without arguments")
+        if (err) {
+            console.log("Err: " + err)
+        }
+        console.log("Result: ", results[0].outputArguments[0].value, "\n")
     })
 }
 
@@ -130,6 +145,7 @@ setTimeout(() => {}, 500)
 setInterval(() => {
     readData()
     callAddMethod(5.4, 10.3)
+    callAddMethodNoArguments()
 }, 1000)
 
 // setTimeout(() => {
