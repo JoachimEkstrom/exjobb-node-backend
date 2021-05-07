@@ -58,6 +58,8 @@ function postData(url, db, data) {
         body: data,
     }).then((response) => {
         console.log(response.status, "\n")
+        let res = response.status
+        return { res, data }
         //console.log(response.statusText)
         //console.log(response.headers)
     })

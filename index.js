@@ -1,13 +1,26 @@
-const { OPCUAClient, makeBrowsePath, AttributeIds, resolveNodeId, TimestampsToReturn } = require("node-opcua")
-const opcua = require("node-opcua")
+const {
+    OPCUAClient,
+    makeBrowsePath,
+    AttributeIds,
+    resolveNodeId,
+    TimestampsToReturn,
+    generateAddressSpaceRawCallback,
+} = require("node-opcua")
 const async = require("async")
-const influxdb = require("./InfluxDb")
+const OPC_calls = require("./OPC_calls.js")
 const endpointUrl = "opc.tcp://DESKTOP-3NAA2AR:4841/"
-const dbUrl = "http://localhost:8086/"
-const dbName = "ExJobb"
+
 let the_session
 let client
-let responeData = []
+
+const express = require("express")
+const bodyParser = require("body-parser")
+const cors = require("cors")
+const app = express()
+const port = 3005
+
+app.use(cors())
+app.use(bodyParser.json())
 
 async function runOpcClient() {
     client = OPCUAClient.create({
@@ -45,109 +58,22 @@ async function runOpcClient() {
         },
     ])
 }
-//read variables with read
-async function readData() {
-    const maxAge = 0
-    const nodeToRead = [
-        {
-            nodeId: "ns=7;s=GVL.toInfluxDB.sMeasurement",
-            attributeId: AttributeIds.Value,
-        },
-        {
-            nodeId: "ns=7;s=GVL.toInfluxDB.sTagsNames",
-            attributeId: AttributeIds.Value,
-        },
-        {
-            nodeId: "ns=7;s=GVL.toInfluxDB.sTagsValues",
-            attributeId: AttributeIds.Value,
-        },
-        {
-            nodeId: "ns=7;s=GVL.toInfluxDB.sFieldsNames",
-            attributeId: AttributeIds.Value,
-        },
-        {
-            nodeId: "ns=7;s=GVL.toInfluxDB.sFieldValues",
-            attributeId: AttributeIds.Value,
-        },
-        {
-            nodeId: "ns=7;s=GVL.toInfluxDB.dTimeStamp",
-            attributeId: AttributeIds.Value,
-        },
-    ]
-    the_session.read(nodeToRead, maxAge, function (err, dataValue) {
-        responeData = []
-        if (!err) {
-            for (i = 0; i < dataValue.length; i++) {
-                responeData = [...responeData, dataValue[i].value.value]
-            }
 
-            influxdb.storeData(dbUrl, dbName, responeData)
-        }
-        return err
-    })
-}
-
-async function callAddMethod(a, b) {
-    let methodToCalls = [
-        {
-            objectId: "ns=7;s=MAIN.methods",
-            methodId: "ns=7;s=MAIN.methods#Method_Add2",
-            inputArguments: [
-                { dataType: opcua.DataType.Float, value: a },
-                { dataType: opcua.DataType.Float, value: b },
-            ],
-        },
-    ]
-
-    the_session.call(methodToCalls, function (err, results) {
-        if (err) {
-            console.log("Err: " + err)
-        }
-        console.log("Inputs: ", a, b)
-        console.log("Result: ", results[0].outputArguments[0].value, "\n")
-    })
-}
-
-async function callAddMethodNoArguments() {
-    let methodToCalls = [
-        {
-            objectId: "ns=7;s=MAIN.methods",
-            methodId: "ns=7;s=MAIN.methods#Method_Add",
-        },
-    ]
-
-    the_session.call(methodToCalls, function (err, results) {
-        console.log("Calling function without arguments")
-        if (err) {
-            console.log("Err: " + err)
-        }
-        console.log("Result: ", results[0].outputArguments[0].value, "\n")
-    })
-}
-
-// close session
-async function closeSession() {
-    the_session.close(function (err) {
-        if (err) {
-            console.log("closing session failed ?")
-        }
-    })
-    client.disconnect(function () {
-        console.log("Disconnecting")
-    })
-}
-
-// Run commands
+// Start OPC Server
 runOpcClient()
 
-setTimeout(() => {}, 500)
+// Express server
 
-setInterval(() => {
-    readData()
-    callAddMethod(5.4, 10.3)
-    callAddMethodNoArguments()
-}, 1000)
+app.get("/read", async (req, res) => {
+    let data = await OPC_calls.readData(the_session)
+    res.json(data)
+})
+app.post("/call", async (req, res) => {
+    let data = await OPC_calls.callAddMethod(the_session, req.body.a, req.body.b)
+    console.log(data)
+    res.json(data)
+})
 
-// setTimeout(() => {
-//     closeSession()
-// }, 500)
+app.listen(port, () => {
+    console.log(`Example app listening at http://localhost:${port}`)
+})
