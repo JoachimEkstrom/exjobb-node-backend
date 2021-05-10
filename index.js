@@ -68,8 +68,18 @@ app.get("/read", async (req, res) => {
     let data = await OPC_calls.readData(the_session)
     res.json(data)
 })
+app.post("/readvariable", async (req, res) => {
+    let data = await OPC_calls.readVariable(the_session, req.body.nodeId)
+    console.log(data)
+    res.json(data)
+})
 app.post("/call", async (req, res) => {
     let data = await OPC_calls.callAddMethod(the_session, req.body.a, req.body.b)
+    console.log(data)
+    res.json(data)
+})
+app.post("/browse", async (req, res) => {
+    let data = await OPC_calls.browseSession(the_session, req.body.uri)
     console.log(data)
     res.json(data)
 })

@@ -5,7 +5,21 @@ const dbUrl = "http://localhost:8086/"
 const dbName = "ExJobb"
 let responeData = []
 
-//read variables with read
+// step 4 : read a variable with readVariableValue
+async function readVariable(the_session, nodeId) {
+    let res = await new Promise((resolve, reject) => {
+        the_session.read({ nodeId: nodeId, attributeId: AttributeIds.Value }, (err, dataValue) => {
+            if (!err) {
+                resolve(dataValue.value.value)
+            } else {
+                reject("Error: Could not read varable ", err)
+            }
+        })
+    })
+    return res
+}
+
+//read complete Influx String with read
 async function readData(the_session) {
     let res = await new Promise((resolve, reject) => {
         const maxAge = 0
@@ -109,15 +123,20 @@ async function callAddMethodNoArguments(the_session) {
 }
 
 // browse session
-async function browseSession(the_session) {
+async function browseSession(the_session, uri) {
     let res = await new Promise((resolve, reject) => {
-        the_session.browse("RootFolder", function (err, browseResult) {
+        the_session.browse(uri, function (err, browseResult) {
             if (!err) {
-                let data
-                console.log("Browsing rootfolder: ")
-                for (let reference of browseResult.references) {
-                    console.log(reference.browseName.toString(), reference.nodeId.toString())
-                    data = [...data, { name: reference.browseName.toString(), id: reference.nodeId.toString() }]
+                let data = []
+
+                for (let i = 0; i < browseResult.references.length; i++) {
+                    data = [
+                        ...data,
+                        {
+                            name: browseResult.references[i].browseName.toString(),
+                            id: browseResult.references[i].nodeId.toString(),
+                        },
+                    ]
                 }
                 resolve(data)
             } else {
@@ -140,4 +159,4 @@ async function closeSession(the_session) {
     })
 }
 
-module.exports = { readData, callAddMethod, callAddMethodNoArguments, closeSession }
+module.exports = { readVariable, readData, callAddMethod, callAddMethodNoArguments, browseSession, closeSession }
