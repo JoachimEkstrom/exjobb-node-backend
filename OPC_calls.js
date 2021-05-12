@@ -1,4 +1,11 @@
-const { OPCUAClient, makeBrowsePath, AttributeIds, resolveNodeId, TimestampsToReturn } = require("node-opcua")
+const {
+    OPCUAClient,
+    makeBrowsePath,
+    AttributeIds,
+    resolveNodeId,
+    TimestampsToReturn,
+    BrowseResult,
+} = require("node-opcua")
 const opcua = require("node-opcua")
 const influxdb = require("./InfluxDb")
 const dbUrl = "http://localhost:8086/"
@@ -10,7 +17,11 @@ async function readVariable(the_session, nodeId) {
     let res = await new Promise((resolve, reject) => {
         the_session.read({ nodeId: nodeId, attributeId: AttributeIds.Value }, (err, dataValue) => {
             if (!err) {
-                resolve(dataValue.value.value)
+                if (dataValue.value.value !== null) {
+                    resolve(dataValue.value.value)
+                } else {
+                    resolve("Returned NULL value")
+                }
             } else {
                 reject("Error: Could not read varable ", err)
             }
@@ -67,12 +78,13 @@ async function readData(the_session) {
     return res
 }
 
-async function callAddMethod(the_session, a, b) {
+async function callAddMethod(the_session, uri, a, b) {
     let res = await new Promise((resolve, reject) => {
+        let objId = uri.split("#")
         let methodToCalls = [
             {
-                objectId: "ns=7;s=MAIN.methods",
-                methodId: "ns=7;s=MAIN.methods#Method_Add2",
+                objectId: objId[0], //"ns=7;s=MAIN.methods"
+                methodId: uri, //"ns=7;s=MAIN.methods#Method_Add2"
                 inputArguments: [
                     { dataType: opcua.DataType.Float, value: a },
                     { dataType: opcua.DataType.Float, value: b },
@@ -130,11 +142,24 @@ async function browseSession(the_session, uri) {
                 let data = []
 
                 for (let i = 0; i < browseResult.references.length; i++) {
+                    // console.log(browseResult.references[i])
                     data = [
                         ...data,
                         {
                             name: browseResult.references[i].browseName.toString(),
                             id: browseResult.references[i].nodeId.toString(),
+                            nodeClass: browseResult.references[i].nodeClass,
+                            arguments: [],
+                            result: "",
+                            // NodeClass
+                            // OBJECT_1
+                            // VARIABLE_2
+                            // METHOD_4
+                            // OBJECT_TYPE_8
+                            // VARIABLE_TYPE_16
+                            // REFERENCE_TYPE_32
+                            // DATA_TYPE_64
+                            // VIEW_128
                         },
                     ]
                 }

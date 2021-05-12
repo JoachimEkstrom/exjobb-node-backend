@@ -73,8 +73,8 @@ app.post("/readvariable", async (req, res) => {
     console.log(data)
     res.json(data)
 })
-app.post("/call", async (req, res) => {
-    let data = await OPC_calls.callAddMethod(the_session, req.body.a, req.body.b)
+app.post("/callMethod", async (req, res) => {
+    let data = await OPC_calls.callAddMethod(the_session, req.body.uri, req.body.a, req.body.b)
     console.log(data)
     res.json(data)
 })
