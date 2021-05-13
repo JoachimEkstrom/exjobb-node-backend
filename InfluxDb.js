@@ -15,7 +15,8 @@ async function storeData(url, db, data) {
     completeString = addTimestamp(completeString, timestamp)
 
     console.log(completeString)
-    postData(url, db, completeString)
+    let res = await postData(url, db, completeString)
+    return res
 }
 
 function fixMeasurement(incString, name) {
@@ -51,18 +52,21 @@ function addTimestamp(incString, time) {
     return incString
 }
 
-function postData(url, db, data) {
-    fetch(`${url}write?db=${db}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: data,
-    }).then((response) => {
-        console.log(response.status, "\n")
-        let res = response.status
-        return { res, data }
-        //console.log(response.statusText)
-        //console.log(response.headers)
+async function postData(url, db, data) {
+    let res = await new Promise((resolve, reject) => {
+        fetch(`${url}write?db=${db}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: data,
+        }).then((response) => {
+            console.log(response.status, "\n")
+            let status = response.status
+            resolve({ status, data })
+            //console.log(response.statusText)
+            //console.log(response.headers)
+        })
     })
+    return res
 }
 
 module.exports = {

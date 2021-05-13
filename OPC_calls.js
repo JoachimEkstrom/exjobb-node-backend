@@ -7,9 +7,7 @@ const {
     BrowseResult,
 } = require("node-opcua")
 const opcua = require("node-opcua")
-const influxdb = require("./InfluxDb")
-const dbUrl = "http://localhost:8086/"
-const dbName = "ExJobb"
+
 let responeData = []
 
 // step 4 : read a variable with readVariableValue
@@ -67,9 +65,8 @@ async function readData(the_session) {
                     responseData = [...responseData, dataValue[i].value.value]
                 }
                 if (responseData[0] !== null) {
-                    resolve(influxdb.storeData(dbUrl, dbName, responseData))
+                    resolve(responseData)
                 } else {
-                    console.log("No data returned")
                     resolve("No data returned")
                 }
             }

@@ -9,6 +9,9 @@ const {
 const async = require("async")
 const OPC_calls = require("./OPC_calls.js")
 const endpointUrl = "opc.tcp://DESKTOP-3NAA2AR:4841/"
+const influxdb = require("./InfluxDb")
+const dbUrl = "http://localhost:8086/"
+const dbName = "ExJobb"
 
 let the_session
 let client
@@ -64,9 +67,11 @@ runOpcClient()
 
 // Express server
 
-app.get("/read", async (req, res) => {
+app.get("/addToInfluxDb", async (req, res) => {
     let data = await OPC_calls.readData(the_session)
-    res.json(data)
+    let response = await influxdb.storeData(dbUrl, dbName, data)
+    console.log(response)
+    res.json(response)
 })
 app.post("/readvariable", async (req, res) => {
     let data = await OPC_calls.readVariable(the_session, req.body.nodeId)
@@ -78,7 +83,7 @@ app.post("/callMethod", async (req, res) => {
     console.log(data)
     res.json(data)
 })
-app.post("/browse", async (req, res) => {
+app.post("/browseOPCServer", async (req, res) => {
     let data = await OPC_calls.browseSession(the_session, req.body.uri)
     console.log(data)
     res.json(data)
