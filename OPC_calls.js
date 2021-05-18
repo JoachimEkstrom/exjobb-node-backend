@@ -10,7 +10,7 @@ const opcua = require("node-opcua")
 
 let responeData = []
 
-// step 4 : read a variable with readVariableValue
+//  read a variable
 async function readVariable(the_session, nodeId) {
     let res = await new Promise((resolve, reject) => {
         the_session.read({ nodeId: nodeId, attributeId: AttributeIds.Value }, (err, dataValue) => {
@@ -28,6 +28,34 @@ async function readVariable(the_session, nodeId) {
     return res
 }
 
+//  write a variable
+async function writeVariable(the_session, nodeId, newValue) {
+    let res = await new Promise((resolve, reject) => {
+        let data = {
+            nodeId: nodeId,
+            attributeId: AttributeIds.Value,
+            value: {
+                value: {
+                    dataType: opcua.DataType.Double,
+                    value: newValue,
+                },
+            },
+        }
+
+        the_session.write(data, (err, statusCode) => {
+            if (!err) {
+                if (statusCode !== null) {
+                    resolve(statusCode)
+                } else {
+                    resolve("Returned NULL value")
+                }
+            } else {
+                reject("Error: Could not read varable ", err)
+            }
+        })
+    })
+    return res
+}
 //read complete Influx String with read
 async function readData(the_session) {
     let res = await new Promise((resolve, reject) => {
