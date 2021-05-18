@@ -36,7 +36,7 @@ async function writeVariable(the_session, nodeId, newValue) {
             attributeId: AttributeIds.Value,
             value: {
                 value: {
-                    dataType: opcua.DataType.Double,
+                    dataType: opcua.DataType.Int16,
                     value: newValue,
                 },
             },
