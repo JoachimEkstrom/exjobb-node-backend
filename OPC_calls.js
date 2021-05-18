@@ -209,4 +209,12 @@ async function closeSession(the_session) {
     })
 }
 
-module.exports = { readVariable, readData, callAddMethod, callAddMethodNoArguments, browseSession, closeSession }
+module.exports = {
+    readVariable,
+    writeVariable,
+    readData,
+    callAddMethod,
+    callAddMethodNoArguments,
+    browseSession,
+    closeSession,
+}
