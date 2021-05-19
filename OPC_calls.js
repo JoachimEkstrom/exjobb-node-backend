@@ -1,19 +1,10 @@
-const {
-    OPCUAClient,
-    makeBrowsePath,
-    AttributeIds,
-    resolveNodeId,
-    TimestampsToReturn,
-    BrowseResult,
-} = require("node-opcua")
+const { AttributeIds } = require("node-opcua")
 const opcua = require("node-opcua")
 
-let responeData = []
-
 //  read a variable
-async function readVariable(the_session, nodeId) {
+async function readVariable(OPCUA_Session, nodeId) {
     let res = await new Promise((resolve, reject) => {
-        the_session.read({ nodeId: nodeId, attributeId: AttributeIds.Value }, (err, dataValue) => {
+        OPCUA_Session.read({ nodeId: nodeId, attributeId: AttributeIds.Value }, (err, dataValue) => {
             if (!err) {
                 if (dataValue.value.value !== null) {
                     resolve(dataValue.value.value)
@@ -29,7 +20,7 @@ async function readVariable(the_session, nodeId) {
 }
 
 //  write a variable
-async function writeVariable(the_session, nodeId, newValue) {
+async function writeVariable(OPCUA_Session, nodeId, newValue) {
     let res = await new Promise((resolve, reject) => {
         let data = {
             nodeId: nodeId,
@@ -42,7 +33,7 @@ async function writeVariable(the_session, nodeId, newValue) {
             },
         }
 
-        the_session.write(data, (err, statusCode) => {
+        OPCUA_Session.write(data, (err, statusCode) => {
             if (!err) {
                 if (statusCode !== null) {
                     resolve(statusCode)
@@ -57,7 +48,7 @@ async function writeVariable(the_session, nodeId, newValue) {
     return res
 }
 //read complete Influx String with read
-async function readData(the_session) {
+async function readData(OPCUA_Session) {
     let res = await new Promise((resolve, reject) => {
         const maxAge = 0
         const nodeToRead = [
@@ -86,7 +77,7 @@ async function readData(the_session) {
                 attributeId: AttributeIds.Value,
             },
         ]
-        the_session.read(nodeToRead, maxAge, function (err, dataValue) {
+        OPCUA_Session.read(nodeToRead, maxAge, function (err, dataValue) {
             responseData = []
             if (!err) {
                 for (i = 0; i < dataValue.length; i++) {
@@ -103,7 +94,7 @@ async function readData(the_session) {
     return res
 }
 
-async function callAddMethod(the_session, uri, a, b) {
+async function callAddMethod(OPCUA_Session, uri, a, b) {
     let res = await new Promise((resolve, reject) => {
         let objId = uri.split("#")
         let methodToCalls = [
@@ -117,7 +108,7 @@ async function callAddMethod(the_session, uri, a, b) {
             },
         ]
 
-        the_session.call(methodToCalls, function (err, results) {
+        OPCUA_Session.call(methodToCalls, function (err, results) {
             if (err) {
                 console.log("Err: " + err)
             }
@@ -134,7 +125,7 @@ async function callAddMethod(the_session, uri, a, b) {
     return res
 }
 
-async function callAddMethodNoArguments(the_session) {
+async function callAddMethodNoArguments(OPCUA_Session) {
     let res = await new Promise((resolve, reject) => {
         let methodToCalls = [
             {
@@ -143,7 +134,7 @@ async function callAddMethodNoArguments(the_session) {
             },
         ]
 
-        the_session.call(methodToCalls, function (err, results) {
+        OPCUA_Session.call(methodToCalls, function (err, results) {
             console.log("Calling function without arguments")
             if (err) {
                 console.log("Err: " + err)
@@ -160,9 +151,9 @@ async function callAddMethodNoArguments(the_session) {
 }
 
 // browse session
-async function browseSession(the_session, uri) {
+async function browseSession(OPCUA_Session, uri) {
     let res = await new Promise((resolve, reject) => {
-        the_session.browse(uri, function (err, browseResult) {
+        OPCUA_Session.browse(uri, function (err, browseResult) {
             if (!err) {
                 let data = []
 
@@ -198,8 +189,8 @@ async function browseSession(the_session, uri) {
 }
 
 // close session
-async function closeSession(the_session) {
-    the_session.close(function (err) {
+async function closeSession(OPCUA_Session) {
+    OPCUA_Session.close(function (err) {
         if (err) {
             console.log("closing session failed ?")
         }

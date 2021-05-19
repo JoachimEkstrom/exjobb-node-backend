@@ -1,11 +1,4 @@
-const {
-    OPCUAClient,
-    makeBrowsePath,
-    AttributeIds,
-    resolveNodeId,
-    TimestampsToReturn,
-    generateAddressSpaceRawCallback,
-} = require("node-opcua")
+const { OPCUAClient } = require("node-opcua")
 const async = require("async")
 const OPC_calls = require("./OPC_calls.js")
 const endpointUrl = "opc.tcp://DESKTOP-3NAA2AR:4841/"
@@ -13,7 +6,7 @@ const influxdb = require("./InfluxDb")
 const dbUrl = "http://localhost:8086/"
 const dbName = "ExJobb"
 
-let the_session
+let OPCUA_Session
 let client
 
 const express = require("express")
@@ -54,7 +47,7 @@ async function runOpcClient() {
                             return err
                         }
                         console.log("Session created!")
-                        the_session = session
+                        OPCUA_Session = session
                     })
                 }
             })
@@ -68,32 +61,32 @@ runOpcClient()
 // Express server
 
 app.get("/addToInfluxDb", async (req, res) => {
-    let data = await OPC_calls.readData(the_session)
+    let data = await OPC_calls.readData(OPCUA_Session)
     let response = await influxdb.storeData(dbUrl, dbName, data)
     console.log(response)
     res.json(response)
 })
 app.post("/readvariable", async (req, res) => {
-    let data = await OPC_calls.readVariable(the_session, req.body.nodeId)
+    let data = await OPC_calls.readVariable(OPCUA_Session, req.body.nodeId)
     console.log(data)
     res.json(data)
 })
 app.post("/writeVariable", async (req, res) => {
-    let data = await OPC_calls.writeVariable(the_session, req.body.nodeId, req.body.newValue)
+    let data = await OPC_calls.writeVariable(OPCUA_Session, req.body.nodeId, req.body.newValue)
     console.log(data)
     res.json(data)
 })
 app.post("/callMethod", async (req, res) => {
-    let data = await OPC_calls.callAddMethod(the_session, req.body.uri, req.body.a, req.body.b)
+    let data = await OPC_calls.callAddMethod(OPCUA_Session, req.body.uri, req.body.a, req.body.b)
     console.log(data)
     res.json(data)
 })
 app.post("/browseOPCServer", async (req, res) => {
-    let data = await OPC_calls.browseSession(the_session, req.body.uri)
+    let data = await OPC_calls.browseSession(OPCUA_Session, req.body.uri)
     console.log(data)
     res.json(data)
 })
 
 app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`)
+    console.log(`OPC Backend is listening at http://localhost:${port}`)
 })
