@@ -55,35 +55,78 @@ async function runOpcClient() {
     ])
 }
 
-// Start OPC Server
+// Start OPC client
 runOpcClient()
 
 // Express server
 
 app.get("/addToInfluxDb", async (req, res) => {
-    let data = await OPC_calls.readData(OPCUA_Session)
-    let response = await influxdb.storeData(dbUrl, dbName, data)
+    let data
+    let response
+    try {
+        data = await OPC_calls.readData(OPCUA_Session)
+        response = await influxdb.storeData(dbUrl, dbName, data)
+    } catch (error) {
+        console.log(error)
+        response = error
+    }
     console.log(response)
     res.json(response)
 })
 app.post("/readvariable", async (req, res) => {
-    let data = await OPC_calls.readVariable(OPCUA_Session, req.body.nodeId)
-    console.log(data)
+    let data
+    try {
+        data = await OPC_calls.readVariable(OPCUA_Session, req.body.nodeId)
+        console.log(data)
+    } catch (error) {
+        console.log(error)
+        data = error
+    }
+
     res.json(data)
 })
 app.post("/writeVariable", async (req, res) => {
-    let data = await OPC_calls.writeVariable(OPCUA_Session, req.body.nodeId, req.body.newValue)
-    console.log(data)
+    let data
+    try {
+        data = await OPC_calls.writeVariable(OPCUA_Session, req.body.nodeId, req.body.newValue)
+        console.log(data)
+    } catch (error) {
+        console.log(error)
+        data = error
+    }
     res.json(data)
 })
 app.post("/callMethod", async (req, res) => {
-    let data = await OPC_calls.callAddMethod(OPCUA_Session, req.body.uri, req.body.a, req.body.b)
-    console.log(data)
+    let data
+    try {
+        data = await OPC_calls.callAddMethod(OPCUA_Session, req.body.uri, req.body.a, req.body.b)
+        console.log(data)
+    } catch (error) {
+        console.log(error)
+        data = error
+    }
     res.json(data)
 })
 app.post("/browseOPCServer", async (req, res) => {
-    let data = await OPC_calls.browseSession(OPCUA_Session, req.body.uri)
-    console.log(data)
+    let data
+    try {
+        data = await OPC_calls.browseSession(OPCUA_Session, req.body.uri)
+        console.log(data)
+    } catch (error) {
+        console.log(error)
+        data = error
+    }
+    res.json(data)
+})
+app.post("/getMethodArguments", async (req, res) => {
+    let data
+    try {
+        data = await OPC_calls.getMethodArguments(OPCUA_Session, req.body.uri)
+        console.log(data)
+    } catch (error) {
+        console.log(error)
+        data = error
+    }
     res.json(data)
 })
 

@@ -1,4 +1,4 @@
-const { AttributeIds } = require("node-opcua")
+const { OPCUAClient, AttributeIds, makeBrowsePath, StatusCodes } = require("node-opcua")
 const opcua = require("node-opcua")
 
 //  read a variable
@@ -12,14 +12,14 @@ async function readVariable(OPCUA_Session, nodeId) {
                     resolve("Returned NULL value")
                 }
             } else {
-                reject("Error: Could not read varable ", err)
+                reject("Error: Could not read varable")
             }
         })
     })
     return res
 }
 
-//  write a variable
+//  write to a variable
 async function writeVariable(OPCUA_Session, nodeId, newValue) {
     let res = await new Promise((resolve, reject) => {
         let data = {
@@ -33,6 +33,10 @@ async function writeVariable(OPCUA_Session, nodeId, newValue) {
             },
         }
 
+        // Check this out
+        // UaNode node = client.getAddressSpace().getNode(NODEID);
+        // if ((UaVariable)node).getUserAccessLevel().contains(AccessLevel.CurrentWrite) { /* your code here */ }
+
         OPCUA_Session.write(data, (err, statusCode) => {
             if (!err) {
                 if (statusCode !== null) {
@@ -41,7 +45,7 @@ async function writeVariable(OPCUA_Session, nodeId, newValue) {
                     resolve("Returned NULL value")
                 }
             } else {
-                reject("Error: Could not read varable ", err)
+                reject("Error: Could not write varable")
             }
         })
     })
@@ -86,7 +90,7 @@ async function readData(OPCUA_Session) {
                 if (responseData[0] !== null) {
                     resolve(responseData)
                 } else {
-                    resolve("No data returned")
+                    reject("No data returned")
                 }
             }
         })
@@ -94,6 +98,7 @@ async function readData(OPCUA_Session) {
     return res
 }
 
+// Call a method with arguments
 async function callAddMethod(OPCUA_Session, uri, a, b) {
     let res = await new Promise((resolve, reject) => {
         let objId = uri.split("#")
@@ -117,7 +122,7 @@ async function callAddMethod(OPCUA_Session, uri, a, b) {
                 console.log("Result: ", results[0].outputArguments[0].value, "\n")
                 resolve(results[0].outputArguments[0].value)
             } else {
-                resolve("No response from OPC Method") // Should be change to reject as soon as testiog is done.
+                reject("No response from OPC Method") // Should be change to reject as soon as testiog is done.
             }
         })
     })
@@ -125,6 +130,7 @@ async function callAddMethod(OPCUA_Session, uri, a, b) {
     return res
 }
 
+// Call a method without arguments
 async function callAddMethodNoArguments(OPCUA_Session) {
     let res = await new Promise((resolve, reject) => {
         let methodToCalls = [
@@ -150,15 +156,19 @@ async function callAddMethodNoArguments(OPCUA_Session) {
     return res
 }
 
-// browse session
+// browse folder in the OPC server
 async function browseSession(OPCUA_Session, uri) {
     let res = await new Promise((resolve, reject) => {
         OPCUA_Session.browse(uri, function (err, browseResult) {
             if (!err) {
                 let data = []
+                console.log("Here")
+                console.log(browseResult.references)
+                console.log(browseResult.typeDefinition)
+                // console.log(browseResult.displayName)
+                // console.log(browseResult.referenceTypeId)
 
                 for (let i = 0; i < browseResult.references.length; i++) {
-                    // console.log(browseResult.references[i])
                     data = [
                         ...data,
                         {
@@ -188,6 +198,63 @@ async function browseSession(OPCUA_Session, uri) {
     return res
 }
 
+// get the arguments for a method
+async function getMethodArguments(OPCUA_Session, uri) {
+    let res = await new Promise((resolve, reject) => {
+        const inputArgumentNodeId = `${uri}.InputArguments`
+        const outputArgumentNodeId = `${uri}.OutputArguments`
+
+        const nodesToRead = [
+            { attributeIds: AttributeIds.Value, nodeId: inputArgumentNodeId },
+            { attributeIds: AttributeIds.Value, nodeId: outputArgumentNodeId },
+        ]
+        const maxAge = 0
+        OPCUA_Session.read(nodesToRead, maxAge, function (err, dataValue) {
+            responseData = []
+            if (!err) {
+                for (i = 0; i < dataValue.length; i++) {
+                    responseData = [...responseData, dataValue[i].value.value]
+                }
+                if (responseData[0] !== null) {
+                    resolve(responseData)
+                } else {
+                    resolve("No data returned")
+                }
+            } else {
+                reject("Error getting arguments")
+            }
+            // Datatypes and their OPC UA Id number
+            //      ID	Name	Description
+            // 1	Boolean	A two-state logical value (true or false).
+            // 2	SByte	An integer value between −128 and 127 inclusive.
+            // 3	Byte	An integer value between 0 and 255 inclusive.
+            // 4	Int16	An integer value between −32 768 and 32 767 inclusive.
+            // 5	UInt16	An integer value between 0 and 65 535 inclusive.
+            // 6	Int32	An integer value between −2 147 483 648 and 2 147 483 647 inclusive.
+            // 7	UInt32	An integer value between 0 and 4 294 967 295 inclusive.
+            // 8	Int64	An integer value between −9 223 372 036 854 775 808 and 9 223 372 036 854 775 807 inclusive.
+            // 9	UInt64	An integer value between 0 and 18 446 744 073 709 551 615 inclusive.
+            // 10	Float	An IEEE single precision (32 bit) floating point value.
+            // 11	Double	An IEEE double precision (64 bit) floating point value.
+            // 12	String	A sequence of Unicode characters.
+            // 13	DateTime	An instance in time.
+            // 14	Guid	A 16-byte value that can be used as a globally unique identifier.
+            // 15	ByteString	A sequence of octets.
+            // 16	XmlElement	An XML element.
+            // 17	NodeId	An identifier for a node in the address space of an OPC UA Server.
+            // 18	ExpandedNodeId	A NodeId that allows the namespace URI to be specified instead of an index.
+            // 19	StatusCode	A numeric identifier for an error or condition that is associated with a value or an operation.
+            // 20	QualifiedName	A name qualified by a namespace.
+            // 21	LocalizedText	Human readable text with an optional locale identifier.
+            // 22	ExtensionObject	A structure that contains an application specific data type that may not be recognized by the receiver.
+            // 23	DataValue	A data value with an associated status code and timestamps.
+            // 24	Variant	A union of all of the types specified above.
+            // 25	DiagnosticInfo	A structure that contains detailed error and diagnostic information associated with a StatusCode.
+        })
+    })
+    return res
+}
+
 // close session
 async function closeSession(OPCUA_Session) {
     OPCUA_Session.close(function (err) {
@@ -207,5 +274,6 @@ module.exports = {
     callAddMethod,
     callAddMethodNoArguments,
     browseSession,
+    getMethodArguments,
     closeSession,
 }
