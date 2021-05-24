@@ -33,22 +33,17 @@ async function writeVariable(OPCUA_Session, nodeId, newValue) {
             },
         }
 
-        console.log("here with newValue :", newValue)
-        OPCUA_Session.readAllAttributes(nodeId, function (err, nodesToRead, dataValues, diagnostics) {
-            console.log(nodesToRead)
+        OPCUA_Session.write(data, (err, statusCode) => {
+            if (!err) {
+                if (statusCode !== null) {
+                    if (statusCode._name === "Good") resolve("Value written to OPC Server")
+                } else {
+                    resolve("Returned NULL value")
+                }
+            } else {
+                reject("Error: Could not write varable")
+            }
         })
-
-        // OPCUA_Session.write(data, (err, statusCode) => {
-        //     if (!err) {
-        //         if (statusCode !== null) {
-        //             resolve(statusCode)
-        //         } else {
-        //             resolve("Returned NULL value")
-        //         }
-        //     } else {
-        //         reject("Error: Could not write varable")
-        //     }
-        // })
     })
     return res
 }
@@ -178,6 +173,7 @@ async function browseSession(OPCUA_Session, uri) {
                             arguments: [],
                             result: "",
                             readOnly: readOnly,
+                            dataType: "",
                             // NodeClass
                             // OBJECT_1
                             // VARIABLE_2
@@ -199,24 +195,33 @@ async function browseSession(OPCUA_Session, uri) {
 
     for (let i = 0; i < data.length; i++) {
         if (data[i].nodeClass === 2) {
-            data[i].readOnly = await readall(OPCUA_Session, data[i].id)
+            let res = await readAttributes(OPCUA_Session, data[i].id)
+            data[i].readOnly = res.readOnly
+            data[i].dataType = res.dataType
         }
     }
     return data
 }
 
-async function readall(OPCUA_Session, id) {
+async function readAttributes(OPCUA_Session, id) {
     let data = await new Promise((resolve, reject) => {
-        let readOnly
+        let data = {
+            readOnly: "",
+            dataType: "",
+        }
+
         OPCUA_Session.readAllAttributes(id, (err, nodesToRead, dataValues, diagnostics) => {
             if (!err) {
-                //console.log(nodesToRead)
+                console.log(nodesToRead)
                 if (nodesToRead.userAccessLevel === 3) {
-                    readOnly = false
+                    data.readOnly = false
                 } else {
-                    readOnly = true
+                    data.readOnly = true
                 }
-                resolve(readOnly)
+                data.dataType = nodesToRead.dataType.value
+                resolve(data)
+            } else {
+                reject("Could not read attributes from node")
             }
         })
     })
