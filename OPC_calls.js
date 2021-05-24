@@ -33,21 +33,22 @@ async function writeVariable(OPCUA_Session, nodeId, newValue) {
             },
         }
 
-        // Check this out
-        // UaNode node = client.getAddressSpace().getNode(NODEID);
-        // if ((UaVariable)node).getUserAccessLevel().contains(AccessLevel.CurrentWrite) { /* your code here */ }
-
-        OPCUA_Session.write(data, (err, statusCode) => {
-            if (!err) {
-                if (statusCode !== null) {
-                    resolve(statusCode)
-                } else {
-                    resolve("Returned NULL value")
-                }
-            } else {
-                reject("Error: Could not write varable")
-            }
+        console.log("here with newValue :", newValue)
+        OPCUA_Session.readAllAttributes(nodeId, function (err, nodesToRead, dataValues, diagnostics) {
+            console.log(nodesToRead)
         })
+
+        // OPCUA_Session.write(data, (err, statusCode) => {
+        //     if (!err) {
+        //         if (statusCode !== null) {
+        //             resolve(statusCode)
+        //         } else {
+        //             resolve("Returned NULL value")
+        //         }
+        //     } else {
+        //         reject("Error: Could not write varable")
+        //     }
+        // })
     })
     return res
 }
@@ -158,16 +159,15 @@ async function callAddMethodNoArguments(OPCUA_Session) {
 
 // browse folder in the OPC server
 async function browseSession(OPCUA_Session, uri) {
-    let res = await new Promise((resolve, reject) => {
+    let data = await new Promise((resolve, reject) => {
         OPCUA_Session.browse(uri, function (err, browseResult) {
             if (!err) {
                 let data = []
-                console.log("Here")
-                console.log(browseResult.references)
-                console.log(browseResult.typeDefinition)
+                // console.log(browseResult.references)
+                // console.log(browseResult.typeDefinition)
                 // console.log(browseResult.displayName)
                 // console.log(browseResult.referenceTypeId)
-
+                let readOnly = false
                 for (let i = 0; i < browseResult.references.length; i++) {
                     data = [
                         ...data,
@@ -177,6 +177,7 @@ async function browseSession(OPCUA_Session, uri) {
                             nodeClass: browseResult.references[i].nodeClass,
                             arguments: [],
                             result: "",
+                            readOnly: readOnly,
                             // NodeClass
                             // OBJECT_1
                             // VARIABLE_2
@@ -195,7 +196,31 @@ async function browseSession(OPCUA_Session, uri) {
             }
         })
     })
-    return res
+
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].nodeClass === 2) {
+            data[i].readOnly = await readall(OPCUA_Session, data[i].id)
+        }
+    }
+    return data
+}
+
+async function readall(OPCUA_Session, id) {
+    let data = await new Promise((resolve, reject) => {
+        let readOnly
+        OPCUA_Session.readAllAttributes(id, (err, nodesToRead, dataValues, diagnostics) => {
+            if (!err) {
+                //console.log(nodesToRead)
+                if (nodesToRead.userAccessLevel === 3) {
+                    readOnly = false
+                } else {
+                    readOnly = true
+                }
+                resolve(readOnly)
+            }
+        })
+    })
+    return data
 }
 
 // get the arguments for a method
