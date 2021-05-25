@@ -67,7 +67,6 @@ app.get("/addToInfluxDb", async (req, res) => {
         data = await OPC_calls.readData(OPCUA_Session)
         response = await influxdb.storeData(dbUrl, dbName, data)
     } catch (error) {
-        console.log(error)
         response = error
     }
     console.log(response)

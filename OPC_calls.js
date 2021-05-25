@@ -1,5 +1,4 @@
-const { OPCUAClient, AttributeIds, makeBrowsePath, StatusCodes } = require("node-opcua")
-const opcua = require("node-opcua")
+const { AttributeIds } = require("node-opcua")
 
 //  read a variable
 async function readVariable(OPCUA_Session, nodeId) {
