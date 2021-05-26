@@ -162,11 +162,16 @@ async function browseSession(OPCUA_Session, uri) {
                 // console.log(browseResult.displayName)
                 // console.log(browseResult.referenceTypeId)
                 let readOnly = false
+                let name = ""
                 for (let i = 0; i < browseResult.references.length; i++) {
+                    // remove namespace from name
+                    name = browseResult.references[i].browseName.toString()
+                    name = name.split(":")
+                    name = name[1]
                     data = [
                         ...data,
                         {
-                            name: browseResult.references[i].browseName.toString(),
+                            name: name,
                             id: browseResult.references[i].nodeId.toString(),
                             nodeClass: browseResult.references[i].nodeClass,
                             arguments: [],
