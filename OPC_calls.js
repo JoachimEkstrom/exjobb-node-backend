@@ -167,7 +167,12 @@ async function browseSession(OPCUA_Session, uri) {
                     // remove namespace from name
                     name = browseResult.references[i].browseName.toString()
                     name = name.split(":")
-                    name = name[1]
+                    if (name[1]) {
+                        name = name[1]
+                    } else {
+                        name = name[0]
+                    }
+
                     data = [
                         ...data,
                         {
