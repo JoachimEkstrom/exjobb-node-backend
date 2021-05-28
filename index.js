@@ -87,7 +87,7 @@ app.post("/readvariable", async (req, res) => {
 app.post("/writeVariable", async (req, res) => {
     let data
     try {
-        data = await OPC_calls.writeVariable(OPCUA_Session, req.body.nodeId, req.body.newValue)
+        data = await OPC_calls.writeVariable(OPCUA_Session, req.body.nodeId, req.body.newValue, req.body.dataType)
         console.log(data)
     } catch (error) {
         console.log(error)

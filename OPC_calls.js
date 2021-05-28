@@ -20,14 +20,22 @@ async function readVariable(OPCUA_Session, nodeId) {
 }
 
 //  write to a variable
-async function writeVariable(OPCUA_Session, nodeId, newValue) {
+async function writeVariable(OPCUA_Session, nodeId, newValue, dataType) {
     let res = await new Promise((resolve, reject) => {
+        let dt
+        console.log(dataType)
+        if (dataType === 10) {
+            dt = opcua.DataType.Float
+        } else {
+            dt = opcua.DataType.Int16
+        }
+
         let data = {
             nodeId: nodeId,
             attributeId: AttributeIds.Value,
             value: {
                 value: {
-                    dataType: opcua.DataType.Int16,
+                    dataType: dt,
                     value: newValue,
                 },
             },
